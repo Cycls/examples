@@ -1,12 +1,12 @@
-from cycls import Cycls, Text
+from cycls import Cycls
 from groq import AsyncGroq
 
 cycls = Cycls()
 groq = AsyncGroq(api_key="API_KEY")
 
-async def llm(messages):
+async def groq_llm(x):
     stream = await groq.chat.completions.create(
-        messages=messages,
+        messages=x,
         model="llama3-70b-8192",
         temperature=0.5, max_tokens=1024, top_p=1, stop=None, 
         stream=True,
@@ -19,11 +19,10 @@ async def llm(messages):
     return event_stream()
 
 @cycls("groq")
-async def groq_app(x):
-    messages  = [{"role": "system", "content": "you are a helpful assistant."}]
-    messages +=  x.history
-    messages += [{"role": "user", "content": x.content}]
-    stream = await llm(messages)
-    return Text(stream)
+async def groq_app(message):
+    history = [{"role": "system", "content": "you are a helpful assistant."}]
+    history +=  message.history
+    history += [{"role": "user", "content": message.content}]
+    return await groq_llm(history)
   
 cycls.push()

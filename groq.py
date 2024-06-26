@@ -18,7 +18,7 @@ async def groq_llm(x):
                 yield content
     return event_stream()
 
-@cycls("groq")
+@cycls("@groq")
 async def groq_app(message):
     history = [{"role": "system", "content": "you are a helpful assistant."}]
     history +=  message.history

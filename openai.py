@@ -17,7 +17,7 @@ async def openai_llm(x):
                 yield content
     return event_stream()
 
-@cycls("openai")
+@cycls("@openai")
 async def openai_app(message):
     history = [{"role": "system", "content": "you are a helpful assistant."}]
     history +=  message.history

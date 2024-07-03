@@ -12,7 +12,7 @@ async def gemini_llm(x):
             msg['role'] = 'model'
     y = [{"role": msg["role"], "parts": [{"text": msg["content"]}]} for msg in x]
     
-    model = genai.GenerativeModel(model_name='gemini-1.5-pro')
+    model = genai.GenerativeModel(model_name='gemini-1.5-flash')
     response = await model.generate_content_async(y,stream=True)
     async for chunk in response:
         if chunk.text:

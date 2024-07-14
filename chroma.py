@@ -6,12 +6,9 @@ import chromadb
 import pandas as pd
 import asyncio
 
-# Initialize Cycls and Groq client
-# Note: Replace "your_groq_api_key" with your actual Groq API key
 cycls = Cycls()
 groq = AsyncGroq(api_key="your_groq_api_key")
 
-# Initialize ChromaDB client and create a collection
 chroma_client = chromadb.PersistentClient(path="./chroma_db")
 collection = chroma_client.get_or_create_collection("faqs")
 
@@ -20,9 +17,7 @@ collection = chroma_client.get_or_create_collection("faqs")
 csv_path = "faqs.csv"
 df = pd.read_csv(csv_path)
 
-# Check if the collection is empty before adding documents
 if collection.count() == 0:
-    # Add documents to the ChromaDB collection
     collection.add(
         documents=df['question'].tolist(),
         metadatas=df[['answer', 'class']].to_dict('records'),
@@ -32,9 +27,7 @@ if collection.count() == 0:
 else:
     print("FAQ data already exists in the persistent database.")
 
-# Asynchronous function to retrieve context from ChromaDB
 async def get_context(query, k=3):
-    # Wrap the synchronous query in an executor to make it asynchronous
     results = await asyncio.to_thread(collection.query, query_texts=[query], n_results=k)
 
     questions = results["documents"][0]
@@ -43,9 +36,7 @@ async def get_context(query, k=3):
     context = "\n".join(f"Q: {q}\nA: {a}" for q, a in zip(questions, answers))
     return context, classes
 
-# Function to interact with Groq API
 async def groq_llm(x, context, classes):
-    # Prepare system message with required prompt and context
     system_message = f"""You are a helpful bank assistant. which I would like you to answer based only on the following context and not any other information:
     {context}
     This information is related to the following categories: {', '.join(classes)}
@@ -53,10 +44,9 @@ async def groq_llm(x, context, classes):
 
     full_messages = [{"role": "system", "content": system_message}] + x
 
-    # Create a chat completion stream using Groq API
     stream = await groq.chat.completions.create(
         messages=full_messages,
-        model="llama3-70b-8192",  # Use the appropriate Groq model
+        model="llama3-70b-8192",
         temperature=0.5,
         max_tokens=1024,
         top_p=1,
@@ -64,7 +54,6 @@ async def groq_llm(x, context, classes):
         stream=True,
     )
 
-    # Generator function to yield content from the stream
     async def event_stream():
         async for chunk in stream:
             content = chunk.choices[0].delta.content
@@ -73,7 +62,7 @@ async def groq_llm(x, context, classes):
     return event_stream()
 
 # Main function to handle user input and generate responses
-@cycls("@chroma")#replace with your application name i.e @your-app
+@cycls("@chroma")
 async def chroma_app(message):
     history = message.history
     history += [{"role": "user", "content": message.content}]
